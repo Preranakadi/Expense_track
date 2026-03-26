@@ -1,0 +1,22 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+}
+
+#app {
+    width: 80%;
+    margin: auto;
+}
+
+h1 {
+    color: #333;
+}
+
+input {
+    margin: 10px 0;
+}
+
+canvas {
+    margin-top: 20px;
+}
