@@ -1,22 +1,276 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Expense Tracker</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExpenseFlow - Smart Expense Tracker</title>
+
+  <!-- Google Fonts: Manrope + IBM Plex Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Our Styles -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div id="app">
-        <h1>Expense Tracker Dashboard</h1>
-        <div>
-            <input type="text" id="expense-name" placeholder="Expense Name">
-            <input type="number" id="expense-amount" placeholder="Amount">
-            <button id="add-expense">Add Expense</button>
+
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <nav class="navbar" data-testid="navbar">
+    <div class="navbar-inner">
+      <div class="navbar-brand" data-testid="navbar-brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-chart-line"></i>
         </div>
-        <div id="expense-list"></div>
-        <canvas id="expense-chart"></canvas>
+        <span class="brand-text">ExpenseFlow</span>
+      </div>
+      <div class="navbar-actions">
+        <button class="btn-add-transaction" data-testid="add-transaction-button" onclick="openModal()">
+          <i class="fa-solid fa-plus"></i>
+          <span>Add Transaction</span>
+        </button>
+        <div class="navbar-avatar" data-testid="user-avatar">
+          <img src="https://images.unsplash.com/photo-1650913406617-bd9b0ab07d07?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzV8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjB1c2VyJTIwYXZhdGFyJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzc0NTQ2NzI5fDA&ixlib=rb-4.1.0&q=85&w=80" alt="User" />
+        </div>
+      </div>
     </div>
-    <script src="script.js"></script>
+  </nav>
+
+  <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+  <main class="main-content" data-testid="main-content">
+    <div class="container">
+
+      <!-- Page Header -->
+      <div class="page-header" data-testid="page-header">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">Track your finances with clarity</p>
+        </div>
+        <div class="header-date" data-testid="current-date" id="currentDate"></div>
+      </div>
+
+      <!-- ═══════════════ SUMMARY CARDS ═══════════════ -->
+      <section class="summary-grid" data-testid="summary-cards">
+
+        <div class="summary-card card-balance" data-testid="balance-card">
+          <div class="card-icon-wrap balance-icon-wrap">
+            <i class="fa-solid fa-wallet"></i>
+          </div>
+          <div class="card-info">
+            <span class="card-label">Total Balance</span>
+            <span class="card-value" data-testid="total-balance" id="totalBalance">$0.00</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-income" data-testid="income-card">
+          <div class="card-icon-wrap income-icon-wrap">
+            <i class="fa-solid fa-arrow-trend-up"></i>
+          </div>
+          <div class="card-info">
+            <span class="card-label">Total Income</span>
+            <span class="card-value income-value" data-testid="total-income" id="totalIncome">$0.00</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-expense" data-testid="expense-card">
+          <div class="card-icon-wrap expense-icon-wrap">
+            <i class="fa-solid fa-arrow-trend-down"></i>
+          </div>
+          <div class="card-info">
+            <span class="card-label">Total Expenses</span>
+            <span class="card-value expense-value" data-testid="total-expenses" id="totalExpenses">$0.00</span>
+          </div>
+        </div>
+
+        <div class="summary-card card-savings" data-testid="savings-card">
+          <div class="card-icon-wrap savings-icon-wrap">
+            <i class="fa-solid fa-piggy-bank"></i>
+          </div>
+          <div class="card-info">
+            <span class="card-label">Savings Rate</span>
+            <span class="card-value savings-value" data-testid="savings-rate" id="savingsRate">0%</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ═══════════════ CHARTS SECTION ═══════════════ -->
+      <section class="charts-grid" data-testid="charts-section">
+
+        <!-- Pie Chart: Category Breakdown -->
+        <div class="chart-card" data-testid="category-pie-chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">
+              <i class="fa-solid fa-chart-pie"></i>
+              Expense by Category
+            </h2>
+          </div>
+          <div class="chart-body">
+            <canvas id="categoryPieChart" data-testid="category-pie-chart"></canvas>
+            <p class="chart-empty" id="pieChartEmpty">No expense data yet</p>
+          </div>
+        </div>
+
+        <!-- Bar Chart: Monthly Income vs Expenses -->
+        <div class="chart-card" data-testid="monthly-bar-chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">
+              <i class="fa-solid fa-chart-column"></i>
+              Monthly Overview
+            </h2>
+          </div>
+          <div class="chart-body">
+            <canvas id="monthlyBarChart" data-testid="monthly-bar-chart"></canvas>
+            <p class="chart-empty" id="barChartEmpty">No data yet</p>
+          </div>
+        </div>
+
+        <!-- Line Chart: Balance Trend -->
+        <div class="chart-card chart-card-full" data-testid="balance-line-chart-card">
+          <div class="chart-header">
+            <h2 class="chart-title">
+              <i class="fa-solid fa-chart-line"></i>
+              Balance Trend
+            </h2>
+          </div>
+          <div class="chart-body chart-body-line">
+            <canvas id="balanceLineChart" data-testid="balance-line-chart"></canvas>
+            <p class="chart-empty" id="lineChartEmpty">No data yet</p>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ═══════════════ TRANSACTION HISTORY ═══════════════ -->
+      <section class="transactions-section" data-testid="transactions-section">
+        <div class="transactions-header">
+          <h2 class="section-title">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            Transaction History
+          </h2>
+          <div class="transactions-controls">
+            <select id="categoryFilter" class="filter-select" data-testid="category-filter" onchange="renderTransactions()">
+              <option value="all">All Categories</option>
+            </select>
+            <select id="typeFilter" class="filter-select" data-testid="type-filter" onchange="renderTransactions()">
+              <option value="all">All Types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="transactions-table-wrap" data-testid="transactions-table">
+          <table class="transactions-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="transactionsBody" data-testid="transactions-body">
+            </tbody>
+          </table>
+          <div class="empty-state" id="emptyState" data-testid="empty-state">
+            <i class="fa-solid fa-receipt"></i>
+            <p>No transactions yet</p>
+            <span>Click "Add Transaction" to get started</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ═══════════════ ADD TRANSACTION MODAL ═══════════════ -->
+  <div class="modal-overlay" id="transactionModal" data-testid="transaction-modal">
+    <div class="modal-content" data-testid="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Add Transaction</h2>
+        <button class="modal-close" data-testid="modal-close-button" onclick="closeModal()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="transactionForm" data-testid="transaction-form" onsubmit="handleAddTransaction(event)">
+
+        <!-- Type Toggle -->
+        <div class="type-toggle" data-testid="type-toggle">
+          <button type="button" class="type-btn active" data-testid="type-income-button" id="typeIncomeBtn" onclick="setTransactionType('income')">
+            <i class="fa-solid fa-arrow-trend-up"></i> Income
+          </button>
+          <button type="button" class="type-btn" data-testid="type-expense-button" id="typeExpenseBtn" onclick="setTransactionType('expense')">
+            <i class="fa-solid fa-arrow-trend-down"></i> Expense
+          </button>
+        </div>
+
+        <!-- Amount -->
+        <div class="form-group">
+          <label class="form-label" for="amount">Amount</label>
+          <div class="input-with-icon">
+            <span class="input-icon">$</span>
+            <input type="number" id="amount" class="form-input amount-input" data-testid="amount-input" placeholder="0.00" step="0.01" min="0.01" required />
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label class="form-label" for="description">Description</label>
+          <input type="text" id="description" class="form-input" data-testid="description-input" placeholder="e.g., Grocery shopping" required />
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+          <label class="form-label" for="category">Category</label>
+          <select id="category" class="form-input" data-testid="category-select" required>
+            <option value="">Select category</option>
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Entertainment">Entertainment</option>
+            <option value="Bills">Bills</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Health">Health</option>
+            <option value="Education">Education</option>
+            <option value="Salary">Salary</option>
+            <option value="Freelance">Freelance</option>
+            <option value="Investment">Investment</option>
+            <option value="Other">Other</option>
+            <option value="__custom__">+ Add Custom Category</option>
+          </select>
+        </div>
+
+        <!-- Custom Category (hidden by default) -->
+        <div class="form-group" id="customCategoryGroup" style="display: none;">
+          <label class="form-label" for="customCategory">Custom Category Name</label>
+          <input type="text" id="customCategory" class="form-input" data-testid="custom-category-input" placeholder="Enter category name" />
+        </div>
+
+        <!-- Date -->
+        <div class="form-group">
+          <label class="form-label" for="date">Date</label>
+          <input type="date" id="date" class="form-input" data-testid="date-input" required />
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn-submit" data-testid="submit-transaction-button">
+          <i class="fa-solid fa-check"></i>
+          Add Transaction
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Our Script -->
+  <script src="script.js"></script>
 </body>
 </html>
