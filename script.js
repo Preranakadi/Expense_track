@@ -20,6 +20,13 @@ document.addEventListener("DOMContentLoaded", () => {
 /* ---------- MODAL ---------- */
 function openModal() {
   document.getElementById("transactionModal").classList.add("open");
+  // Reset to income by default
+  currentType = "income";
+  document.getElementById("typeIncomeBtn").classList.add("active");
+  document.getElementById("typeExpenseBtn").classList.remove("active");
+  document.getElementById("transactionForm").reset();
+  document.getElementById("customCategoryGroup").style.display = "none";
+  setDefaultDate();
 }
 
 function closeModal() {
@@ -29,6 +36,9 @@ function closeModal() {
 
 function resetForm() {
   document.getElementById("transactionForm").reset();
+  currentType = "income";
+  document.getElementById("typeIncomeBtn").classList.add("active");
+  document.getElementById("typeExpenseBtn").classList.remove("active");
   setDefaultDate();
   document.getElementById("customCategoryGroup").style.display = "none";
 }
@@ -79,6 +89,12 @@ function handleAddTransaction(e) {
   let description = document.getElementById("description").value;
   let category = document.getElementById("category").value;
   let date = document.getElementById("date").value;
+
+  // Validate inputs
+  if (!amount || !description || !category || !date) {
+    alert("Please fill in all fields");
+    return;
+  }
 
   if (category === "__custom__") {
     category = document.getElementById("customCategory").value;
@@ -248,7 +264,7 @@ function updateCharts() {
     if (!t.date) return;
     let m = t.date.slice(0, 7);
     if (!months[m]) {
-      months[m] = { income: 0, expense: 0 };
+      months[m] = { income: 0, expense: 0 };  
     }
     months[m][t.type] += t.amount;
   });
